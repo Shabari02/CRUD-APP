@@ -24,4 +24,9 @@ public class StudentController {
     public List<Student> list() {
         return studentService.getAllStudents();
     }
+    @DeleteMapping("/delete")
+    public String delete(@RequestParam int id) {
+        studentService.delStudent(id);
+        return "Student with ID " + id + " has been deleted.";
+    }
 }

@@ -9,7 +9,6 @@ This is a CRUD (Create, Read, Update, Delete) application built using React and 
 - Create, Read, Update, and Delete data entries
 - Responsive and intuitive user interface
 - Input validation and error handling
-- Secure authentication and authorization
 - Back-end API endpoints to handle data operations
 
 ## Technologies Used

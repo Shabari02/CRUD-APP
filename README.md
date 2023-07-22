@@ -46,8 +46,10 @@ npm install
 3. Set up the back-end:
 ```bash
 cd backend
-./mvnw spring-boot:run
+gradle bootrun
 ```
+or
+run BackendApplication.java
 
 ## Usage
 Once the application and servers are up and running, open your web browser and go to http://localhost:3000 to access the CRUD application. From there, you can create, read, update, and delete data entries as needed.

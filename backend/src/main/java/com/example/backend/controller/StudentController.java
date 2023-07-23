@@ -29,4 +29,10 @@ public class StudentController {
         studentService.delStudent(id);
         return "Student with ID " + id + " has been deleted.";
     }
+    @PutMapping("/update")
+    private String update(@RequestParam int id, @RequestBody Student student)
+    {
+        studentService.updateStudent(id, student);
+        return "Student with ID " + id + " has been updated.";
+    }
 }

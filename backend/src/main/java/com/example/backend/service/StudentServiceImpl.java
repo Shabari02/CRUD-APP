@@ -6,6 +6,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class StudentServiceImpl implements StudentService {
@@ -19,6 +20,19 @@ public class StudentServiceImpl implements StudentService {
     @Override
     public void delStudent(int id) {
         studentRepo.deleteById(id);
+    }
+    @Override
+    public void updateStudent(int id, Student student) {
+        Optional<Student> optionalStudent = studentRepo.findById(id);
+
+        if (optionalStudent.isPresent()) {
+            Student studentInfo = optionalStudent.get();
+            studentInfo.setName(student.getName());
+            studentInfo.setAddress(student.getAddress());
+            studentRepo.save(studentInfo);
+        }
+        // Handle the case when the student with the given ID is not found
+        // You can throw an exception or return an appropriate response based on your requirements.
     }
 
     @Override

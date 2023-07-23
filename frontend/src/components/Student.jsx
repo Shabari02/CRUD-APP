@@ -2,52 +2,85 @@ import * as React from "react";
 import Box from "@mui/material/Box";
 import TextField from "@mui/material/TextField";
 import { Button, Container, Paper } from "@mui/material";
+import DataService from "../services/DataService"; // Import the DataService class
 
 export default function Student() {
     const paperStyle = { padding: "50px 20px", margin: "20px auto" };
     const [name, setName] = React.useState("");
     const [address, setAddress] = React.useState("");
-    const [student, setStudent] = React.useState("");
-    const handleClick = (e) => {
-        const student = { name, address };
-        console.log(student);
-        fetch("http://localhost:8080/student/add", {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(student),
-        })
+    const [edit, setEdit] = React.useState(false);
+    const [students, setStudents] = React.useState([]);
+    const [editStudentId, setEditStudentId] = React.useState(null);
+
+    const handleEdit = (id) => {
+        setEdit(true);
+        setEditStudentId(id);
+
+        // Get the student data by ID and set it in the input fields
+        const editedStudent = students.find((student) => student.id === id);
+        if (editedStudent) {
+        setName(editedStudent.name);
+        setAddress(editedStudent.address);
+        }
+    };
+
+    const handleCancelEdit = () => {
+        setEdit(false);
+        setEditStudentId(null);
+        setName("");
+        setAddress("");
+    };
+
+    const handleClick = React.useCallback(() => {
+        const studentData = { name, address };
+        console.log(studentData);
+        DataService.create(studentData)
+            .then(() => {
+                console.log("New student added");
+                setName("");
+                setAddress("");
+            })
+            .catch((e) => {
+                console.log(e);
+            });
+        }, [name, address]);
+
+    const handleUpdate = (id) => {
+        const studentData = { name, address };
+        console.log(studentData);
+        DataService.update(id, studentData)
         .then(() => {
-            console.log("New student added");
+            console.log("Student information updated");
+            setEdit(false);
         })
         .catch((e) => {
             console.log(e);
         });
-        setName("");
-        setAddress("");
     };
-    const handleDelete = (id) => {
-        var requestOptions = {
-        method: "DELETE",
-        redirect: "follow",
-        };
 
-        fetch(`http://localhost:8080/student/delete?id=${id}`, requestOptions)
-        .then((response) => response.text())
-        .then((result) => console.log(result))
-        .catch((error) => console.log("error", error));
-        console.log(id)
-        // console.log("Clicked");
-    };
-    React.useEffect(() => {
-        fetch("http://localhost:8080/student/getAll")
-        .then((res) => res.json())
-        .then((result) => {
-            setStudent(result);
+    const handleDelete = (id) => {
+        DataService.delete(id)
+        .then((response) => {
+            console.log(response.data);
+            setStudents((prevStudents) =>
+            prevStudents.filter((student) => student.id !== id)
+            );
+        })
+        .catch((error) => {
+            console.log(error);
         });
-        // console.log("calling");
-    }, [student]);
+    };
+
+    React.useEffect(() => {
+        DataService.getAll()
+        .then((response) => {
+            setStudents(response.data);
+        })
+        .catch((error) => {
+            console.log(error);
+        });
+    }, [handleClick]);
+
     return (
         <Container>
         <Paper elevation={3} style={paperStyle}>
@@ -67,7 +100,7 @@ export default function Student() {
                 label="Student Name"
                 variant="outlined"
                 fullWidth
-                value={name}
+                
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Vasi"
             />
@@ -76,7 +109,7 @@ export default function Student() {
                 label="Student address"
                 variant="outlined"
                 fullWidth
-                value={address}
+            
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Chennai"
             />
@@ -87,26 +120,92 @@ export default function Student() {
         </Paper>
         <Paper elevation={3} style={paperStyle}>
             <h1>Student Details</h1>
-            {student &&
-            student.map((student) => (
-                <>
+            {students &&
+            students.map((student) => (
+                <React.Fragment key={student.id}>
                 <Paper
                     elevation={6}
-                    style={{ margin: "10px", padding: "15px", textAlign: "left", display: "flex" ,justifyContent: "space-between" }}
-                    key={student.id}
+                    style={{
+                    margin: "10px",
+                    padding: "15px",
+                    textAlign: "left",
+                    display: "flex",
+                    justifyContent: "space-between",
+                    }}
                 >
                     <div>
-                        Name: &nbsp; {student.name}
-                        <br />
-                        Address:&nbsp;{student.address}
+                    Name: &nbsp;
+                    {edit && editStudentId === student.id ? (
+                        <TextField
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        variant="standard"
+                        />
+                    ) : (
+                        <TextField
+                        defaultValue={student.name}
+                        InputProps={{
+                            readOnly: true,
+                        }}
+                        variant="standard"
+                        />
+                    )}
+                    <br />
+                    Address: &nbsp;
+                    {edit && editStudentId === student.id ? (
+                        <TextField
+                        value={address}
+                        onChange={(e) => setAddress(e.target.value)}
+                        variant="standard"
+                        />
+                    ) : (
+                        <TextField
+                        defaultValue={student.address}
+                        InputProps={{
+                            readOnly: true,
+                        }}
+                        variant="standard"
+                        />
+                    )}
                     </div>
-                    <Button variant="outlined" color="error" onClick={()=> handleDelete(student.id)}>
+                    <div>
+                    {edit && editStudentId === student.id ? (
+                        <>
+                        <Button
+                            variant="outlined"
+                            color="primary"
+                            onClick={() => handleUpdate(student.id)}
+                        >
+                            Save
+                        </Button>
+                        <Button
+                            variant="outlined"
+                            color="secondary"
+                            onClick={handleCancelEdit}
+                        >
+                            Cancel
+                        </Button>
+                        </>
+                    ) : (
+                        <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => handleEdit(student.id)}
+                        >
+                        Edit
+                        </Button>
+                    )}
+                    <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDelete(student.id)}
+                    >
                         Delete
                     </Button>
+                    </div>
                 </Paper>
-                </>
+                </React.Fragment>
             ))}
-            
         </Paper>
         </Container>
     );
